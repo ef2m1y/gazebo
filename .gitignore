@@ -1,7 +1,9 @@
-# pixi が生成する環境本体 (1.8 GB)。pixi.lock から再構築するため追跡しない
+# pixi が生成する環境本体 (3.6 GB)。pixi.lock から再構築するため追跡しない
 .pixi/
 
-# カメラセンサーの PNG 出力・GUI スクリーンショット
+# 生成物: rosbag・点群プロット・カメラ PNG・GUI スクリーンショット
 output/
 
+__pycache__/
+*.pyc
 .DS_Store
