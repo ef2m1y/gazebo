@@ -1,8 +1,40 @@
 [workspace]
 name = "gazebo"
-description = "Gazebo Sim (Jetty) on macOS / Apple Silicon via conda-forge"
-channels = ["conda-forge"]
+description = "Gazebo Sim (Harmonic) + ROS 2 Jazzy on macOS / Apple Silicon"
+channels = ["robostack-jazzy", "conda-forge"]
 platforms = ["osx-arm64"]
 
+# Harmonic (gz-sim8) を使う理由は「古いから安定」ではない。Jetty (gz-sim10) も LTS で
+# EOL は 2031-05 と Harmonic の 2029-05 より長い。単に **Jetty 対応の ros-gz が
+# どのチャンネルにも無い** ため:
+#   ros-jazzy-ros-gz 1.0.23  -> gz-transport13 / gz-msgs10 (Harmonic)
+#   ros-kilted-ros-gz 2.1.15 -> gz-transport14 / gz-msgs11 (Ionic)
+#   robostack-rolling        -> 存在しない
+# Jetty は gz-transport15 / gz-msgs12 で 2 メジャー差があり通信できない。
+# Jazzy <-> Harmonic は公式ペアリングで、どちらも LTS。
 [dependencies]
-gz-sim = ">=10.5.0,<11"
+gz-sim8 = "*"
+ros-jazzy-ros-gz = "*"
+ros-jazzy-ros2run = "*"
+ros-jazzy-ros2bag = "*"
+# mcap ストレージ。zstd チャンク圧縮を --storage-preset-profile で使うために要る
+# (別パッケージの rosbag2-compression-zstd とは別物。README 7-3 参照)
+ros-jazzy-rosbag2-storage-mcap = "*"
+
+# ROS 2 Jazzy の discovery 既定は SUBNET で、同一サブネット上の他マシンの
+# ROS 2 システムと相互に見えてしまう (検証中、無関係な 13 トピックが見えた)。
+# シミュレーションのデータを LAN に撒かないよう隔離する。
+# 他マシンへ流したい場合はこの 2 つを外す。
+[activation.env]
+ROS_AUTOMATIC_DISCOVERY_RANGE = "LOCALHOST"
+ROS_DOMAIN_ID = "42"
+
+[tasks]
+avia-sim = "gz sim -s -r worlds/livox_avia_gpu.sdf"
+# pixi の task shell は [ を glob として解釈するのでシングルクォートが要る
+avia-bridge = "ros2 run ros_gz_bridge parameter_bridge '/livox/avia/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked'"
+# 既定は .db3 (sqlite3)。10 Hz 維持は実測確認済み (README 7-3)。
+# 無圧縮なので 7.3 MiB/s = 26 GiB/時 になる点に注意
+avia-record = "ros2 bag record -o output/bags/avia -s sqlite3 --topics /livox/avia/points"
+# 容量を抑えたいとき用。mcap のチャンク単位 zstd で約 1/5 になる
+avia-record-mcap = "ros2 bag record -o output/bags/avia_mcap -s mcap --storage-preset-profile zstd_fast --topics /livox/avia/points"
