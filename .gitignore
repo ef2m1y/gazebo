@@ -1,0 +1,7 @@
+# pixi が生成する環境本体 (1.8 GB)。pixi.lock から再構築するため追跡しない
+.pixi/
+
+# カメラセンサーの PNG 出力・GUI スクリーンショット
+output/
+
+.DS_Store

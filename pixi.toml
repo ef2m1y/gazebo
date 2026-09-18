@@ -1,0 +1,8 @@
+[workspace]
+name = "gazebo"
+description = "Gazebo Sim (Jetty) on macOS / Apple Silicon via conda-forge"
+channels = ["conda-forge"]
+platforms = ["osx-arm64"]
+
+[dependencies]
+gz-sim = ">=10.5.0,<11"
